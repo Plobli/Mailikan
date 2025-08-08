@@ -58,7 +58,10 @@ class EmailKanban {
             
             const result = await response.json();
             if (response.ok) {
-                this.showMessage(`${result.count} neue E-Mails synchronisiert`, 'success');
+                if (result.count > 0) {
+                    this.showMessage(`${result.count} neue E-Mails synchronisiert`, 'success');
+                }
+                // Always reload all emails to ensure consistency
                 await this.loadEmails();
             } else {
                 throw new Error(result.error);

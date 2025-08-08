@@ -1,7 +1,7 @@
 {
-  "name": "kanban-email-website",
+  "name": "mailikan",
   "version": "1.0.0",
-  "description": "Email Kanban Board - A web application to organize emails in a Kanban board",
+  "description": "Mailikan - A web application to organize emails in a Kanban board",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -10,6 +10,7 @@
     "test": "echo 'No tests specified'"
   },
   "keywords": [
+    "mailikan",
     "kanban",
     "email",
     "imap",

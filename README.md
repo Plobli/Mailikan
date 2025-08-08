@@ -1,4 +1,4 @@
-# Email Kanban Board
+# Mailikan
 
 Eine Web-Anwendung zum Organisieren von E-Mails in einem Kanban-Board. E-Mails werden über IMAP von einem E-Mail-Server abgerufen und können zwischen drei Spalten verschoben werden: **Posteingang**, **In Bearbeitung** und **Warte auf Antwort**.
 

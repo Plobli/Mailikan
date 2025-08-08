@@ -32,9 +32,13 @@ app.get('/api/emails', async (req, res) => {
 
 app.post('/api/emails/sync', async (req, res) => {
   try {
-    const newEmails = await emailService.fetchEmails();
-    await kanbanService.addEmailsToInbox(newEmails);
-    res.json({ message: 'Emails synchronized successfully', count: newEmails.length });
+    const allEmails = await emailService.fetchEmails();
+    const result = await kanbanService.addEmailsToInbox(allEmails);
+    res.json({ 
+      message: 'Emails synchronized successfully', 
+      count: result.newEmailsCount,
+      emails: result.newEmails 
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -64,8 +68,8 @@ async function initializeServer() {
 }
 
 app.listen(PORT, async () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Open http://localhost:${PORT} to view the application`);
+  console.log(`Mailikan server running on port ${PORT}`);
+  console.log(`Open http://localhost:${PORT} to view Mailikan`);
   
   // Initialize folders after server starts
   await initializeServer();

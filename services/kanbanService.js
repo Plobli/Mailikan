@@ -52,8 +52,9 @@ class KanbanService {
       existingEmailMap.set(key, email);
     });
     
-    // Process new emails
+    // Process new emails and track truly new ones
     const updatedEmails = [];
+    const newEmailsOnly = [];
     
     newEmails.forEach(newEmail => {
       const key = `${newEmail.subject}-${newEmail.from}-${new Date(newEmail.date).getTime()}`;
@@ -72,10 +73,12 @@ class KanbanService {
         existingEmailMap.delete(key); // Remove from map
       } else {
         // New email, add it
-        updatedEmails.push({
+        const emailWithMetadata = {
           ...newEmail,
           lastModified: new Date().toISOString()
-        });
+        };
+        updatedEmails.push(emailWithMetadata);
+        newEmailsOnly.push(emailWithMetadata); // Track for response
       }
     });
     
@@ -84,10 +87,14 @@ class KanbanService {
       updatedEmails.push(email);
     });
     
-    console.log(`Saving ${updatedEmails.length} total emails (${newEmails.length} from server, ${existingEmailMap.size} remaining local)`);
+    console.log(`Saving ${updatedEmails.length} total emails (${newEmailsOnly.length} truly new, ${newEmails.length - newEmailsOnly.length} updated)`);
     await this.saveEmails(updatedEmails);
     
-    return newEmails; // Return the new emails for response
+    return {
+      newEmails: newEmailsOnly,
+      newEmailsCount: newEmailsOnly.length,
+      totalEmails: updatedEmails.length
+    };
   }
 
   async moveEmail(emailId, newColumn) {
