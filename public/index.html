@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Kanban Board</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>📧 Email Kanban Board</h1>
+        <div class="header-actions">
+            <button id="sync-btn" class="btn btn-primary">📥 E-Mails synchronisieren</button>
+            <div class="email-stats" id="email-stats"></div>
+        </div>
+    </header>
+
+    <main class="kanban-board">
+        <div class="column" id="posteingang-column">
+            <div class="column-header">
+                <h2>📨 Posteingang</h2>
+                <span class="email-count" id="posteingang-count">0</span>
+            </div>
+            <div class="email-list" id="posteingang-list" data-column="posteingang">
+                <!-- Emails will be loaded here -->
+            </div>
+        </div>
+
+        <div class="column" id="in-bearbeitung-column">
+            <div class="column-header">
+                <h2>⚙️ In Bearbeitung</h2>
+                <span class="email-count" id="in-bearbeitung-count">0</span>
+            </div>
+            <div class="email-list" id="in-bearbeitung-list" data-column="in-bearbeitung">
+                <!-- Emails will be loaded here -->
+            </div>
+        </div>
+
+        <div class="column" id="warte-auf-antwort-column">
+            <div class="column-header">
+                <h2>⏳ Warte auf Antwort</h2>
+                <span class="email-count" id="warte-auf-antwort-count">0</span>
+            </div>
+            <div class="email-list" id="warte-auf-antwort-list" data-column="warte-auf-antwort">
+                <!-- Emails will be loaded here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Email Modal -->
+    <div id="email-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="email-details">
+                <h3 id="modal-subject"></h3>
+                <div class="email-meta">
+                    <p><strong>Von:</strong> <span id="modal-from"></span></p>
+                    <p><strong>An:</strong> <span id="modal-to"></span></p>
+                    <p><strong>Datum:</strong> <span id="modal-date"></span></p>
+                </div>
+                <div class="email-content">
+                    <div id="modal-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading indicator -->
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <p>Lade E-Mails...</p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
