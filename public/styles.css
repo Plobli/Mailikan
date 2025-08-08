@@ -13,8 +13,8 @@
 
 :root {
   /* Signal.un.ms-inspired Color Palette */
-  --primary-color: #2563EB; /* Blue-600 */
-  --primary-hover: #1D4ED8; /* Blue-700 */
+  --primary-color: #3b536f; /* Blue-600 */
+  --primary-hover: #406b9c; /* Blue-700 */
   --secondary-color: #64748B; /* Slate-500 */
   --accent-color: #059669; /* Emerald-600 */
   --danger-color: #DC2626; /* Red-600 */
@@ -28,7 +28,7 @@
   /* Background Colors - Neutral grays only */
   --bg-primary: #FFFFFF;
   --bg-secondary: #F8FAFC; /* Slate-50 */
-  --bg-tertiary: #d5bdaf; /* Slate-100 */
+  --bg-tertiary: #ffdba1; /* Slate-100 */
   --bg-card: #FFFFFF;
   --bg-column-1: #d6ccc2; /* Very light gray for first column */
   --bg-column-2: #f5ebe0; /* Slightly darker gray for second column */
@@ -182,7 +182,7 @@ header h1 {
 
 /* Columns */
 .column {
-  background-color: var(--bg-card);
+  background-color: #3b536f;
   border-radius: var(--radius-xl);
   overflow: hidden;
   box-shadow: var(--shadow-md);
@@ -198,23 +198,10 @@ header h1 {
   transform: translateY(-2px);
 }
 
-/* Different neutral background shades for each column */
-#posteingang-column {
-  background-color: var(--bg-column-1);
-}
-
-#in-bearbeitung-column {
-  background-color: var(--bg-column-2);
-}
-
-#warte-auf-antwort-column {
-  background-color: var(--bg-column-3);
-}
-
 .column-header {
   padding: var(--space-lg);
-  background-color: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
+  background-color: rgb(6, 20, 39);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -223,7 +210,7 @@ header h1 {
 .column-header h2 {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #ffdba1;
   letter-spacing: -0.025em;
 }
 
@@ -234,8 +221,8 @@ header h1 {
   min-width: 1.5rem;
   height: 1.5rem;
   padding: 0 var(--space-xs);
-  background-color: var(--primary-color);
-  color: white;
+  background-color: #ffffff;
+  color: rgb(44, 44, 46);
   font-size: 0.8125rem; /* Increased from 0.75rem for better accessibility */
   font-weight: 600;
   border-radius: 9999px;
@@ -252,9 +239,12 @@ header h1 {
 }
 
 .email-list.drag-over {
-  background-color: rgba(37, 99, 235, 0.08);
+  background: rgba(0, 122, 255, 0.1);
   border-radius: var(--radius-lg);
-  box-shadow: inset 0 0 0 2px var(--primary-color);
+  box-shadow: 0 12px 40px rgba(0, 122, 255, 0.2);
+  transform: scaleY(1.02);
+  transform-origin: top;
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
 /* Email Cards */
@@ -266,6 +256,7 @@ header h1 {
   transition: all 0.2s ease;
   box-shadow: var(--shadow-sm);
   position: relative;
+  z-index: 1;
 }
 
 .email-card:hover {
@@ -305,6 +296,7 @@ header h1 {
 .email-dropdown {
   position: relative;
   flex-shrink: 0;
+  z-index: 10000;
 }
 
 .dropdown-btn {
@@ -336,7 +328,7 @@ header h1 {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   min-width: 150px;
-  z-index: 1000;
+  z-index: 9999;
   opacity: 0;
   visibility: hidden;
   transform: translateY(-10px);
@@ -375,6 +367,44 @@ header h1 {
 }
 
 .dropdown-item.archive:hover {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+/* Email Actions */
+.email-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--bg-tertiary);
+}
+
+.action-btn {
+  padding: var(--space-xs) var(--space-sm);
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.action-btn.archive {
+  background-color: var(--bg-secondary);
+  border-color: var(--danger-color);
+  color: var(--danger-color);
+}
+
+.action-btn.archive:hover {
   background-color: var(--danger-color);
   color: white;
 }
@@ -481,7 +511,7 @@ header h1 {
 
 .close:hover {
   color: var(--text-secondary);
-  background-color: var(--bg-tertiary);
+  background-color: none;
 }
 
 .modal-body {
@@ -583,8 +613,12 @@ header h1 {
 
 /* Drag and Drop Styles */
 .email-list.drag-over {
-    background-color: #e3f2fd;
-    border: 2px dashed #2196f3;
+    background: rgba(235, 191, 71, 0.1);
+    border-radius: 0px 0px var(--radius-lg) var(--radius-lg);
+    box-shadow: 0 12px 40px rgba(0, 122, 255, 0.2);
+    transform: scaleY(1.02);
+    transform-origin: top;
+    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
 /* Modal Styles */
@@ -740,53 +774,62 @@ header h1 {
     }
 }
 
-/* Archive Drop Zone */
+/* Archive Drop Zone - Apple-inspired Design */
 .archive-zone {
     position: fixed;
-    bottom: 0px;
+    bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
     width: 50%;
-    height: auto;
-    background-color: var(--bg-tertiary);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-md);
+    height: 60px;
+    background: rgb(255, 255, 255);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1),
+                0 2px 8px rgba(0, 0, 0, 0.05);
     cursor: pointer;
-    transition: 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
     z-index: 100;
+    opacity: 0.7;
 }
 
 .archive-zone:hover {
-    box-shadow: var(--shadow-lg);
-    transform: translateX(-50%) translateY(-2px);
+    opacity: 1;
+    transform: translateX(-50%) translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15),
+                0 4px 12px rgba(0, 0, 0, 0.08);
+    background: rgb(255, 255, 255);
 }
 
 .archive-zone.drag-over {
-    background-color: var(--primary-color);
-    box-shadow: 0 0 30px rgba(37, 99, 235, 0.4);
-    transform: translateX(-50%) translateY(0px);
+    opacity: 1;
+    background: rgba(0, 122, 255, 0.1);
+    border-color: rgba(0, 122, 255, 0.3);
+    box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2),
+                0 12px 40px rgba(0, 122, 255, 0.2);
+    transform: translateX(-50%) translateY(-2px) scale(1.05);
 }
 
 .archive-zone.drag-over .archive-content {
-    background-color: rgba(37, 99, 235, 0.2);
-    color: white;
-    backdrop-filter: blur(10px);
+    color: #007AFF;
 }
 
 .archive-content {
-    padding: var(--space-lg);
-    background-color: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
+    padding: 0 24px;
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: var(--radius-xl) var(--radius-xl) 0px 0px;
-    color: var(--text-secondary);
+    height: 100%;
+    color: #1d1d1f;
+    font-weight: 500;
+    font-size: 15px;
+    letter-spacing: -0.01em;
 }
 
 .archive-zone:hover .archive-content {
-    color: var(--text-primary);
-    background-color: rgba(100, 116, 139, 0.15);
+    color: #1d1d1f;
 }
 
 .archive-icon {

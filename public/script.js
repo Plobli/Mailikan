@@ -42,7 +42,6 @@ class EmailKanban {
             const response = await fetch('/api/emails');
             this.emails = await response.json();
             this.renderEmails();
-            this.updateStats();
         } catch (error) {
             this.showMessage('Fehler beim Laden der E-Mails: ' + error.message, 'error');
         } finally {
@@ -116,19 +115,16 @@ class EmailKanban {
         card.innerHTML = `
             <div class="email-header">
                 <div class="email-subject">${this.escapeHtml(email.subject)}</div>
-                <div class="email-dropdown">
-                    <button class="dropdown-btn" onclick="event.stopPropagation(); this.nextElementSibling.classList.toggle('show')">⋯</button>
-                    <div class="dropdown-menu">
-                        <div class="dropdown-item" onclick="event.stopPropagation(); window.kanban.moveEmailFromDropdown('${email.id}', 'posteingang')">Posteingang</div>
-                        <div class="dropdown-item" onclick="event.stopPropagation(); window.kanban.moveEmailFromDropdown('${email.id}', 'in-bearbeitung')">In Bearbeitung</div>
-                        <div class="dropdown-item" onclick="event.stopPropagation(); window.kanban.moveEmailFromDropdown('${email.id}', 'warte-auf-antwort')">Warte auf Antwort</div>
-                        <div class="dropdown-item archive" onclick="event.stopPropagation(); window.kanban.archiveEmailFromDropdown('${email.id}')">Archivieren</div>
-                    </div>
-                </div>
             </div>
             <div class="email-from">${this.escapeHtml(email.from)}</div>
             <div class="email-date">${formattedDate}</div>
             ${preview ? `<div class="email-preview">${this.escapeHtml(preview)}</div>` : ''}
+            <div class="email-actions">
+                <button class="action-btn" onclick="event.stopPropagation(); window.kanban.moveEmailFromDropdown('${email.id}', 'posteingang')">Posteingang</button>
+                <button class="action-btn" onclick="event.stopPropagation(); window.kanban.moveEmailFromDropdown('${email.id}', 'in-bearbeitung')">In Bearbeitung</button>
+                <button class="action-btn" onclick="event.stopPropagation(); window.kanban.moveEmailFromDropdown('${email.id}', 'warte-auf-antwort')">Warte auf Antwort</button>
+                <button class="action-btn archive" onclick="event.stopPropagation(); window.kanban.archiveEmailFromDropdown('${email.id}')">Archivieren</button>
+            </div>
         `;
         
         // Add click event to show email details
@@ -264,7 +260,6 @@ class EmailKanban {
                 if (email) {
                     email.column = newColumn;
                     this.renderEmails();
-                    this.updateStats();
                 }
             } else {
                 const error = await response.json();
@@ -290,7 +285,6 @@ class EmailKanban {
                 // Remove email from local data
                 this.emails = this.emails.filter(e => e.id !== emailId);
                 this.renderEmails();
-                this.updateStats();
                 this.showMessage('E-Mail erfolgreich archiviert', 'success');
             } else {
                 const error = await response.json();
@@ -299,18 +293,6 @@ class EmailKanban {
         } catch (error) {
             this.showMessage('Fehler beim Archivieren der E-Mail: ' + error.message, 'error');
         }
-    }
-
-    updateStats() {
-        const stats = {
-            total: this.emails.length,
-            posteingang: this.emails.filter(e => e.column === 'posteingang').length,
-            'in-bearbeitung': this.emails.filter(e => e.column === 'in-bearbeitung').length,
-            'warte-auf-antwort': this.emails.filter(e => e.column === 'warte-auf-antwort').length
-        };
-
-        const statsElement = document.getElementById('email-stats');
-        statsElement.textContent = `Gesamt: ${stats.total} E-Mails`;
     }
 
     showLoading(show) {
