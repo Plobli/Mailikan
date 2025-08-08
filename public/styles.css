@@ -53,6 +53,16 @@ header h1 {
     transform: translateY(-1px);
 }
 
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+    transform: translateY(-1px);
+}
+
 .email-stats {
     background: rgba(255,255,255,0.2);
     padding: 0.5rem 1rem;

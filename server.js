@@ -51,7 +51,22 @@ app.put('/api/emails/:id/column', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+// Initialize server and ensure Kanban folders exist
+async function initializeServer() {
+  try {
+    console.log('Initializing server...');
+    await emailService.ensureKanbanFolders();
+    console.log('Kanban folders initialized successfully');
+  } catch (error) {
+    console.error('Failed to initialize Kanban folders:', error.message);
+    console.log('Server will continue without folder initialization');
+  }
+}
+
+app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Open http://localhost:${PORT} to view the application`);
+  
+  // Initialize folders after server starts
+  await initializeServer();
 });

@@ -10,6 +10,8 @@ Eine Web-Anwendung zum Organisieren von E-Mails in einem Kanban-Board. E-Mails w
 - 📱 **Responsive Design**: Funktioniert auf Desktop und mobilen Geräten
 - 🔄 **Echtzeit-Synchronisation**: Manuelle und automatische E-Mail-Synchronisation
 - 👁️ **E-Mail-Vorschau**: Schnelle Ansicht der E-Mail-Inhalte
+- 📁 **Server-Synchronisation**: E-Mails werden automatisch in entsprechende Ordner auf dem E-Mail-Server verschoben
+- 🗂️ **Automatische Ordner-Erstellung**: Kanban-Ordner werden automatisch auf dem Server erstellt
 
 ## 📋 Voraussetzungen
 
@@ -193,7 +195,18 @@ kanban-email-website/
 
 - `GET /api/emails` - Alle E-Mails abrufen
 - `POST /api/emails/sync` - E-Mails vom Server synchronisieren
-- `PUT /api/emails/:id/column` - E-Mail in andere Spalte verschieben
+- `PUT /api/emails/:id/column` - E-Mail in andere Spalte verschieben (synchronisiert automatisch mit Server)
+- `POST /api/folders/init` - Kanban-Ordner auf dem E-Mail-Server initialisieren
+
+## 📁 E-Mail-Ordner-Struktur
+
+Die Anwendung erstellt automatisch folgende Ordner auf Ihrem E-Mail-Server:
+
+- **INBOX** (Posteingang) - Standard-Posteingang
+- **In_Bearbeitung** - E-Mails in Bearbeitung
+- **Warte_auf_Antwort** - E-Mails, die auf Antwort warten
+
+Wenn Sie eine E-Mail im Kanban-Board verschieben, wird sie automatisch auch in den entsprechenden Ordner auf dem E-Mail-Server verschoben.
 
 ## 🛡️ Sicherheit
 
