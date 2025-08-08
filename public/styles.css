@@ -22,17 +22,17 @@
   
   /* Neutral Colors */
   --text-primary: #0F172A; /* Slate-900 */
-  --text-secondary: #64748B; /* Slate-500 */
+  --text-secondary: #1d1d1d; /* Slate-500 */
   --text-muted: #475569; /* Slate-600 - Improved contrast for accessibility */
   
   /* Background Colors - Neutral grays only */
   --bg-primary: #FFFFFF;
   --bg-secondary: #F8FAFC; /* Slate-50 */
-  --bg-tertiary: #F1F5F9; /* Slate-100 */
+  --bg-tertiary: #d5bdaf; /* Slate-100 */
   --bg-card: #FFFFFF;
-  --bg-column-1: #FAFAFA; /* Very light gray for first column */
-  --bg-column-2: #F5F5F5; /* Slightly darker gray for second column */
-  --bg-column-3: #F0F0F0; /* Darkest gray for third column */
+  --bg-column-1: #d6ccc2; /* Very light gray for first column */
+  --bg-column-2: #f5ebe0; /* Slightly darker gray for second column */
+  --bg-column-3: #e3d5ca; /* Darkest gray for third column */
   
   /* Shadows - More prominent shadows instead of borders */
   --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.03);
@@ -764,7 +764,7 @@ header h1 {
 .archive-zone.drag-over {
     background-color: var(--primary-color);
     box-shadow: 0 0 30px rgba(37, 99, 235, 0.4);
-    transform: translateX(-50%) translateY(-6px);
+    transform: translateX(-50%) translateY(0px);
 }
 
 .archive-zone.drag-over .archive-content {
@@ -775,7 +775,7 @@ header h1 {
 
 .archive-content {
     padding: var(--space-lg);
-    background-color: rgba(100, 116, 139, 0.1);
+    background-color: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
     display: flex;
     justify-content: center;
