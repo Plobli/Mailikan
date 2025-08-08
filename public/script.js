@@ -1,7 +1,6 @@
 class EmailKanban {
     constructor() {
         this.emails = [];
-        this.autoSyncInterval = null;
         this.init();
     }
 
@@ -9,7 +8,6 @@ class EmailKanban {
         this.bindEvents();
         this.loadEmails();
         this.setupDragAndDrop();
-        this.startAutoSync();
         this.setupDropdownHandlers();
         
         // Make instance globally available for dropdown callbacks
@@ -313,31 +311,6 @@ class EmailKanban {
         setTimeout(() => {
             messageElement.remove();
         }, 5000);
-    }
-
-    startAutoSync() {
-        // Initial sync when the page loads
-        console.log('Starting automatic email synchronization...');
-        this.syncEmails();
-        
-        // Set up interval for automatic sync every 60 seconds
-        this.autoSyncInterval = setInterval(() => {
-            console.log('Auto-syncing emails...');
-            this.syncEmails();
-        }, 60000); // 60000 ms = 60 seconds
-    }
-
-    stopAutoSync() {
-        if (this.autoSyncInterval) {
-            clearInterval(this.autoSyncInterval);
-            this.autoSyncInterval = null;
-            console.log('Auto-sync stopped');
-        }
-    }
-
-    // Clean up when the page is being unloaded
-    destroy() {
-        this.stopAutoSync();
     }
 
     setupDropdownHandlers() {
