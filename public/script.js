@@ -310,7 +310,9 @@ class EmailKanban {
         };
 
         const statsElement = document.getElementById('email-stats');
-        statsElement.textContent = `Gesamt: ${stats.total} E-Mails`;
+        if (statsElement) {
+            statsElement.textContent = `Gesamt: ${stats.total} E-Mails`;
+        }
     }
 
     showLoading(show) {
