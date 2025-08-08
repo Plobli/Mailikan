@@ -120,7 +120,6 @@ class EmailKanban {
             <div class="email-date">${formattedDate}</div>
             ${preview ? `<div class="email-preview">${this.escapeHtml(preview)}</div>` : ''}
             <div class="email-actions">
-                <button class="action-btn" onclick="event.stopPropagation(); window.kanban.moveEmailFromDropdown('${email.id}', 'posteingang')">Posteingang</button>
                 <button class="action-btn" onclick="event.stopPropagation(); window.kanban.moveEmailFromDropdown('${email.id}', 'in-bearbeitung')">In Bearbeitung</button>
                 <button class="action-btn" onclick="event.stopPropagation(); window.kanban.moveEmailFromDropdown('${email.id}', 'warte-auf-antwort')">Warte auf Antwort</button>
                 <button class="action-btn archive" onclick="event.stopPropagation(); window.kanban.archiveEmailFromDropdown('${email.id}')">Archivieren</button>
