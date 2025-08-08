@@ -10,6 +10,10 @@ class EmailKanban {
         this.loadEmails();
         this.setupDragAndDrop();
         this.startAutoSync();
+        this.setupDropdownHandlers();
+        
+        // Make instance globally available for dropdown callbacks
+        window.kanban = this;
     }
 
     bindEvents() {
@@ -110,7 +114,18 @@ class EmailKanban {
         const preview = this.createPreview(email.text || email.html);
         
         card.innerHTML = `
-            <div class="email-subject">${this.escapeHtml(email.subject)}</div>
+            <div class="email-header">
+                <div class="email-subject">${this.escapeHtml(email.subject)}</div>
+                <div class="email-dropdown">
+                    <button class="dropdown-btn" onclick="event.stopPropagation(); this.nextElementSibling.classList.toggle('show')">⋯</button>
+                    <div class="dropdown-menu">
+                        <div class="dropdown-item" onclick="event.stopPropagation(); window.kanban.moveEmailFromDropdown('${email.id}', 'posteingang')">Posteingang</div>
+                        <div class="dropdown-item" onclick="event.stopPropagation(); window.kanban.moveEmailFromDropdown('${email.id}', 'in-bearbeitung')">In Bearbeitung</div>
+                        <div class="dropdown-item" onclick="event.stopPropagation(); window.kanban.moveEmailFromDropdown('${email.id}', 'warte-auf-antwort')">Warte auf Antwort</div>
+                        <div class="dropdown-item archive" onclick="event.stopPropagation(); window.kanban.archiveEmailFromDropdown('${email.id}')">Archivieren</div>
+                    </div>
+                </div>
+            </div>
             <div class="email-from">${this.escapeHtml(email.from)}</div>
             <div class="email-date">${formattedDate}</div>
             ${preview ? `<div class="email-preview">${this.escapeHtml(preview)}</div>` : ''}
@@ -208,6 +223,29 @@ class EmailKanban {
                 await this.moveEmail(emailId, newColumn);
             });
         });
+
+        // Add archive zone event listeners
+        const archiveZone = document.getElementById('archive-zone');
+        if (archiveZone) {
+            archiveZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                archiveZone.classList.add('drag-over');
+            });
+
+            archiveZone.addEventListener('dragleave', (e) => {
+                if (!archiveZone.contains(e.relatedTarget)) {
+                    archiveZone.classList.remove('drag-over');
+                }
+            });
+
+            archiveZone.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                archiveZone.classList.remove('drag-over');
+                
+                const emailId = e.dataTransfer.getData('text/plain');
+                await this.archiveEmail(emailId);
+            });
+        }
     }
 
     async moveEmail(emailId, newColumn) {
@@ -236,6 +274,30 @@ class EmailKanban {
             this.showMessage('Fehler beim Verschieben der E-Mail: ' + error.message, 'error');
             // Reload emails to ensure consistency
             await this.loadEmails();
+        }
+    }
+
+    async archiveEmail(emailId) {
+        try {
+            const response = await fetch(`/api/emails/${emailId}/archive`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                // Remove email from local data
+                this.emails = this.emails.filter(e => e.id !== emailId);
+                this.renderEmails();
+                this.updateStats();
+                this.showMessage('E-Mail erfolgreich archiviert', 'success');
+            } else {
+                const error = await response.json();
+                throw new Error(error.error);
+            }
+        } catch (error) {
+            this.showMessage('Fehler beim Archivieren der E-Mail: ' + error.message, 'error');
         }
     }
 
@@ -295,6 +357,35 @@ class EmailKanban {
     // Clean up when the page is being unloaded
     destroy() {
         this.stopAutoSync();
+    }
+
+    setupDropdownHandlers() {
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.email-dropdown')) {
+                document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                    menu.classList.remove('show');
+                });
+            }
+        });
+    }
+
+    async moveEmailFromDropdown(emailId, newColumn) {
+        // Close dropdown
+        document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+            menu.classList.remove('show');
+        });
+        
+        await this.moveEmail(emailId, newColumn);
+    }
+
+    async archiveEmailFromDropdown(emailId) {
+        // Close dropdown
+        document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+            menu.classList.remove('show');
+        });
+        
+        await this.archiveEmail(emailId);
     }
 }
 

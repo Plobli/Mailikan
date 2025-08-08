@@ -202,6 +202,57 @@ class KanbanService {
       'warte-auf-antwort': emails.filter(e => e.column === 'warte-auf-antwort').length
     };
   }
+
+  async archiveEmail(emailId) {
+    const emails = await this.getAllEmails();
+    const emailIndex = emails.findIndex(email => email.id === emailId);
+    
+    if (emailIndex === -1) {
+      throw new Error(`Email with ID ${emailId} not found`);
+    }
+
+    const email = emails[emailIndex];
+    console.log(`Archiving email: ${email.subject}`);
+    console.log(`Email UID: ${email.uid}, Type: ${typeof email.uid}`);
+    console.log(`Email folder: ${email.folder}`);
+
+    try {
+      const emailService = this.getEmailService();
+      
+      // Use the email's current folder as source
+      const sourceFolder = email.folder || 'INBOX';
+      const archiveFolder = 'Archives';
+      
+      console.log(`Moving from ${sourceFolder} to ${archiveFolder}`);
+      
+      // Ensure UID is a number
+      const uid = parseInt(email.uid);
+      if (isNaN(uid)) {
+        throw new Error(`Invalid UID: ${email.uid}`);
+      }
+      
+      // Ensure archive folder exists
+      await emailService.createFolder(archiveFolder);
+      
+      // Move email to archive on server
+      const moveResult = await emailService.moveEmailToFolder(uid, archiveFolder, sourceFolder);
+      
+      if (moveResult.success) {
+        console.log(`Email successfully archived to ${archiveFolder}`);
+        
+        // Remove email from local storage
+        emails.splice(emailIndex, 1);
+        await this.saveEmails(emails);
+        
+        return true;
+      } else {
+        throw new Error('Failed to move email to archive on server');
+      }
+    } catch (error) {
+      console.error('Failed to archive email:', error);
+      throw new Error(`Failed to archive email: ${error.message}`);
+    }
+  }
 }
 
 module.exports = new KanbanService();

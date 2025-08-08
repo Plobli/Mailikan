@@ -55,6 +55,16 @@ app.put('/api/emails/:id/column', async (req, res) => {
   }
 });
 
+app.put('/api/emails/:id/archive', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await kanbanService.archiveEmail(id);
+    res.json({ message: 'Email archived successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Initialize server and ensure Kanban folders exist
 async function initializeServer() {
   try {
