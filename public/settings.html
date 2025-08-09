@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mailikan - Einstellungen</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .settings-main {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: var(--space-xl);
+        }
+
+        .settings-card {
+            background-color: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            box-shadow: var(--shadow-lg);
+            margin-bottom: var(--space-xl);
+        }
+
+        .settings-header {
+            margin-bottom: var(--space-xl);
+        }
+
+        .settings-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--space-sm);
+        }
+
+        .settings-header p {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        .form-grid {
+            display: grid;
+            gap: var(--space-lg);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-lg);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            margin-bottom: var(--space-sm);
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .form-input {
+            padding: var(--space-md);
+            border: 1px solid #E2E8F0;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-family: var(--font-sans);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 83, 111, 0.1);
+        }
+
+        .form-checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .form-checkbox {
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid #E2E8F0;
+            border-radius: var(--radius-sm);
+            background-color: var(--bg-primary);
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+        }
+
+        .form-checkbox:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: var(--space-md);
+            justify-content: flex-end;
+            margin-top: var(--space-xl);
+            padding-top: var(--space-lg);
+            border-top: 1px solid #E2E8F0;
+        }
+
+        .alert {
+            padding: var(--space-md);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-lg);
+            font-size: 0.875rem;
+        }
+
+        .alert-error {
+            background-color: #FEF2F2;
+            color: var(--danger-color);
+            border: 1px solid #FECACA;
+        }
+
+        .alert-success {
+            background-color: #F0FDF4;
+            color: var(--accent-color);
+            border: 1px solid #BBF7D0;
+        }
+
+        .test-connection {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            margin-top: var(--space-md);
+        }
+
+        .test-result {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .test-result.success {
+            color: var(--accent-color);
+        }
+
+        .test-result.error {
+            color: var(--danger-color);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid #E2E8F0;
+            border-top: 2px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            box-shadow: none !important;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-sm);
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 0.875rem;
+            margin-bottom: var(--space-lg);
+            transition: color 0.15s ease-in-out;
+        }
+
+        .back-link:hover {
+            color: var(--primary-hover);
+        }
+
+        @media (max-width: 640px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            .settings-main {
+                padding: var(--space-lg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Mailikan</h1>
+        <div class="header-actions">
+            <a href="/" class="btn btn-secondary">Zurück zum Kanban</a>
+            <button id="logout-btn" class="btn btn-secondary">Abmelden</button>
+        </div>
+    </header>
+
+    <main class="settings-main">
+        <a href="/" class="back-link">
+            ← Zurück zum Kanban Board
+        </a>
+
+        <div class="settings-card">
+            <div class="settings-header">
+                <h2>IMAP-Einstellungen</h2>
+                <p>Konfigurieren Sie Ihre E-Mail-Server-Verbindung</p>
+            </div>
+
+            <div id="errorMessage" class="alert alert-error" style="display: none;"></div>
+            <div id="successMessage" class="alert alert-success" style="display: none;"></div>
+
+            <form id="settingsForm">
+                <div class="form-grid">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="imapHost" class="form-label">IMAP Server:</label>
+                            <input type="text" id="imapHost" name="imapHost" class="form-input" 
+                                   placeholder="z.B. imap.gmail.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="imapPort" class="form-label">Port:</label>
+                            <input type="number" id="imapPort" name="imapPort" class="form-input" 
+                                   placeholder="993" value="993" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="imapUser" class="form-label">E-Mail-Adresse:</label>
+                        <input type="email" id="imapUser" name="imapUser" class="form-input" 
+                               placeholder="ihre-email@example.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="imapPassword" class="form-label">Passwort:</label>
+                        <input type="password" id="imapPassword" name="imapPassword" class="form-input" 
+                               placeholder="Ihr E-Mail-Passwort" required>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="form-checkbox-wrapper">
+                            <input type="checkbox" id="imapTls" name="imapTls" class="form-checkbox" checked>
+                            <label for="imapTls" class="form-label">TLS/SSL verwenden (empfohlen)</label>
+                        </div>
+                    </div>
+
+                    <div class="test-connection">
+                        <button type="button" id="testBtn" class="btn btn-secondary">Verbindung testen</button>
+                        <div id="testResult" class="test-result"></div>
+                        <div id="testLoading" class="loading" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" id="cancelBtn" class="btn btn-secondary">Abbrechen</button>
+                    <button type="submit" id="saveBtn" class="btn btn-primary">Einstellungen speichern</button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        let originalSettings = {};
+
+        // Load current settings
+        async function loadSettings() {
+            try {
+                const response = await fetch('/api/settings');
+                const settings = await response.json();
+                
+                originalSettings = { ...settings };
+                
+                document.getElementById('imapHost').value = settings.imapHost || '';
+                document.getElementById('imapPort').value = settings.imapPort || '993';
+                document.getElementById('imapUser').value = settings.imapUser || '';
+                document.getElementById('imapPassword').value = settings.imapPassword || '';
+                document.getElementById('imapTls').checked = settings.imapTls !== false;
+            } catch (error) {
+                showError('Fehler beim Laden der Einstellungen: ' + error.message);
+            }
+        }
+
+        // Test IMAP connection
+        document.getElementById('testBtn').addEventListener('click', async () => {
+            console.log('Test button clicked'); // Debug log
+            
+            const testBtn = document.getElementById('testBtn');
+            const testResult = document.getElementById('testResult');
+            const testLoading = document.getElementById('testLoading');
+            
+            const settings = getFormData();
+            console.log('Test settings:', settings); // Debug log
+            
+            // Validate required fields
+            if (!settings.imapHost || !settings.imapUser || !settings.imapPassword) {
+                testResult.textContent = 'Bitte füllen Sie alle erforderlichen Felder aus';
+                testResult.className = 'test-result error';
+                return;
+            }
+            
+            testBtn.disabled = true;
+            testLoading.style.display = 'inline-block';
+            testResult.textContent = '';
+            testResult.className = 'test-result';
+            
+            try {
+                console.log('Sending test request...'); // Debug log
+                
+                const response = await fetch('/api/settings/test', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+                
+                console.log('Response status:', response.status); // Debug log
+                
+                const result = await response.json();
+                console.log('Response data:', result); // Debug log
+                
+                testResult.textContent = result.message;
+                testResult.className = 'test-result ' + (result.success ? 'success' : 'error');
+            } catch (error) {
+                console.error('Test error:', error); // Debug log
+                testResult.textContent = 'Verbindungstest fehlgeschlagen: ' + error.message;
+                testResult.className = 'test-result error';
+            } finally {
+                testBtn.disabled = false;
+                testLoading.style.display = 'none';
+            }
+        });
+
+        // Save settings
+        document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const saveBtn = document.getElementById('saveBtn');
+            const originalText = saveBtn.textContent;
+            
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Speichern...';
+            
+            try {
+                const settings = getFormData();
+                
+                const response = await fetch('/api/settings', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showSuccess('Einstellungen wurden erfolgreich gespeichert');
+                    originalSettings = { ...settings };
+                } else {
+                    showError(result.error || 'Fehler beim Speichern der Einstellungen');
+                }
+            } catch (error) {
+                showError('Fehler beim Speichern: ' + error.message);
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = originalText;
+            }
+        });
+
+        // Cancel changes
+        document.getElementById('cancelBtn').addEventListener('click', () => {
+            if (hasChanges()) {
+                if (confirm('Möchten Sie die Änderungen verwerfen?')) {
+                    resetForm();
+                }
+            } else {
+                window.location.href = '/';
+            }
+        });
+
+        // Logout
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/auth/logout', {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    window.location.href = '/login';
+                } else {
+                    showError('Fehler beim Abmelden');
+                }
+            } catch (error) {
+                showError('Fehler beim Abmelden: ' + error.message);
+            }
+        });
+
+        function getFormData() {
+            return {
+                imapHost: document.getElementById('imapHost').value,
+                imapPort: document.getElementById('imapPort').value,
+                imapUser: document.getElementById('imapUser').value,
+                imapPassword: document.getElementById('imapPassword').value,
+                imapTls: document.getElementById('imapTls').checked,
+                port: originalSettings.port || '3000'
+            };
+        }
+
+        function hasChanges() {
+            const current = getFormData();
+            return JSON.stringify(current) !== JSON.stringify(originalSettings);
+        }
+
+        function resetForm() {
+            document.getElementById('imapHost').value = originalSettings.imapHost || '';
+            document.getElementById('imapPort').value = originalSettings.imapPort || '993';
+            document.getElementById('imapUser').value = originalSettings.imapUser || '';
+            document.getElementById('imapPassword').value = originalSettings.imapPassword || '';
+            document.getElementById('imapTls').checked = originalSettings.imapTls !== false;
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+            window.scrollTo(0, 0);
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+            window.scrollTo(0, 0);
+        }
+
+        // Initialize
+        loadSettings();
+    </script>
+</body>
+</html>
