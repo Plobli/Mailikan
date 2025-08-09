@@ -9,6 +9,7 @@ require('dotenv').config();
 const emailService = require('./services/emailService');
 const kanbanService = require('./services/kanbanService');
 const authService = require('./services/authService');
+const settingsService = require('./services/settingsService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -40,6 +41,10 @@ app.get('/', authService.requireAuth, (req, res) => {
 // Auth Routes
 app.get('/login', authService.redirectIfAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+app.get('/settings', authService.requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'settings.html'));
 });
 
 app.post('/api/auth/login', async (req, res) => {
@@ -150,6 +155,63 @@ app.put('/api/emails/:id/archive', authService.requireAuth, async (req, res) => 
     const { id } = req.params;
     await kanbanService.archiveEmail(id);
     res.json({ message: 'Email archived successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Settings Routes (Protected)
+app.get('/api/settings', authService.requireAuth, async (req, res) => {
+  try {
+    const settings = await settingsService.getSettings();
+    res.json(settings);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/settings', authService.requireAuth, async (req, res) => {
+  try {
+    const { imapHost, imapPort, imapUser, imapPassword, imapTls, port } = req.body;
+    
+    if (!imapHost || !imapPort || !imapUser || !imapPassword) {
+      return res.status(400).json({ error: 'Alle IMAP-Felder sind erforderlich' });
+    }
+    
+    const settings = {
+      imapHost,
+      imapPort,
+      imapUser,
+      imapPassword,
+      imapTls: imapTls === true,
+      port: port || '3000'
+    };
+    
+    await settingsService.updateSettings(settings);
+    res.json({ message: 'Einstellungen wurden erfolgreich gespeichert' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/settings/test', authService.requireAuth, async (req, res) => {
+  try {
+    const { imapHost, imapPort, imapUser, imapPassword, imapTls } = req.body;
+    
+    if (!imapHost || !imapPort || !imapUser || !imapPassword) {
+      return res.status(400).json({ error: 'Alle IMAP-Felder sind erforderlich' });
+    }
+    
+    const settings = {
+      imapHost,
+      imapPort,
+      imapUser,
+      imapPassword,
+      imapTls: imapTls === true
+    };
+    
+    const result = await settingsService.testImapConnection(settings);
+    res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
