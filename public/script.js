@@ -20,6 +20,11 @@ class EmailKanban {
             this.syncEmails();
         });
 
+        // Logout button
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            this.logout();
+        });
+
         // Modal close
         document.querySelector('.close').addEventListener('click', () => {
             this.closeModal();
@@ -340,6 +345,22 @@ class EmailKanban {
         });
         
         await this.archiveEmail(emailId);
+    }
+
+    async logout() {
+        try {
+            const response = await fetch('/api/auth/logout', {
+                method: 'POST'
+            });
+            
+            if (response.ok) {
+                window.location.href = '/login';
+            } else {
+                this.showMessage('Fehler beim Abmelden', 'error');
+            }
+        } catch (error) {
+            this.showMessage('Fehler beim Abmelden: ' + error.message, 'error');
+        }
     }
 }
 

@@ -4,7 +4,9 @@ Eine Web-Anwendung zum Organisieren von E-Mails in einem Kanban-Board. E-Mails w
 
 ## 🚀 Features
 
-- 📧 **IMAP-Integration**: Automatisches Abrufen von E-Mails von Ihrem E-Mail-Server
+- � **Sichere Authentifizierung**: Login mit E-Mail und Passwort
+- 👤 **Benutzerverwaltung**: Einfaches Setup für Administrator-Konto
+- �📧 **IMAP-Integration**: Automatisches Abrufen von E-Mails von Ihrem E-Mail-Server
 - 📋 **Kanban-Board**: Drei Spalten für effiziente E-Mail-Organisation
 - 🖱️ **Drag & Drop**: Intuitive Bedienung durch Ziehen und Ablegen
 - 📱 **Responsive Design**: Funktioniert auf Desktop und mobilen Geräten
@@ -39,11 +41,17 @@ Eine Web-Anwendung zum Organisieren von E-Mails in einem Kanban-Board. E-Mails w
    
    Bearbeiten Sie die `.env` Datei mit Ihren E-Mail-Einstellungen:
    ```env
+   # Session Secret (wichtig für Sicherheit!)
+   SESSION_SECRET=ihr-super-geheimer-session-schluessel
+   
+   # IMAP-Konfiguration
    IMAP_HOST=imap.gmail.com
    IMAP_PORT=993
    IMAP_USER=ihre-email@gmail.com
    IMAP_PASSWORD=ihr-passwort
    IMAP_TLS=true
+   
+   # Server-Konfiguration
    PORT=3000
    ```
 
@@ -57,9 +65,25 @@ Eine Web-Anwendung zum Organisieren von E-Mails in einem Kanban-Board. E-Mails w
    npm run dev
    ```
 
-5. **Browser öffnen**
+5. **Browser öffnen und Setup durchführen**
    
    Besuchen Sie `http://localhost:3000`
+   
+   **Beim ersten Start:**
+   - Sie werden automatisch zur Setup-Seite weitergeleitet
+   - Erstellen Sie ein Administrator-Konto mit E-Mail und Passwort
+   - Das Passwort muss mindestens 6 Zeichen lang sein
+   - Nach dem Setup können Sie sich mit diesen Daten anmelden
+
+## 🔐 Authentifizierung
+
+Mailikan ist mit einem sicheren Login-System ausgestattet:
+
+- **Erstes Setup**: Beim ersten Start erstellen Sie ein Administrator-Konto
+- **Session-basierte Authentifizierung**: Sichere Server-seitige Sessions
+- **Passwort-Hashing**: Passwörter werden mit bcrypt gehashed
+- **Automatische Weiterleitung**: Nicht authentifizierte Benutzer werden zum Login weitergeleitet
+- **Logout-Funktion**: Sicheres Abmelden über den Button in der Kopfzeile
 
 ## 🔧 Konfiguration
 

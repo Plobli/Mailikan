@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mailikan - Login</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Login-specific styles */
+        .login-body {
+            background-color: var(--bg-secondary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-xl);
+        }
+
+        .login-container {
+            background-color: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            padding: var(--space-2xl);
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: var(--space-2xl);
+        }
+
+        .login-header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.025em;
+            margin-bottom: var(--space-xs);
+        }
+
+        .login-header p {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        .form-group {
+            margin-bottom: var(--space-lg);
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: var(--space-sm);
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: var(--space-md);
+            border: 1px solid #E2E8F0;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-family: var(--font-sans);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 83, 111, 0.1);
+        }
+
+        .login-button {
+            width: 100%;
+            margin-bottom: var(--space-lg);
+        }
+
+        .alert {
+            padding: var(--space-md);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-lg);
+            font-size: 0.875rem;
+        }
+
+        .alert-error {
+            background-color: #FEF2F2;
+            color: var(--danger-color);
+            border: 1px solid #FECACA;
+        }
+
+        .alert-success {
+            background-color: #F0FDF4;
+            color: var(--accent-color);
+            border: 1px solid #BBF7D0;
+        }
+
+        .alert-info {
+            background-color: #EFF6FF;
+            color: var(--primary-color);
+            border: 1px solid #BFDBFE;
+        }
+
+        .setup-info {
+            text-align: center;
+        }
+
+        .setup-info h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: var(--space-sm);
+            color: var(--primary-color);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: var(--space-lg);
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 640px) {
+            .login-container {
+                padding: var(--space-xl);
+                margin: var(--space-md);
+            }
+        }
+    </style>
+</head>
+<body class="login-body">
+    <div class="login-container">
+        <div class="login-header">
+            <h1>Mailikan</h1>
+            <p>Email Kanban Board</p>
+        </div>
+
+        <div id="setupInfo" class="alert alert-info setup-info" style="display: none;">
+            <h3>Erstes Setup</h3>
+            <p>Erstellen Sie ein Administrator-Konto für Mailikan</p>
+        </div>
+
+        <div id="errorMessage" class="alert alert-error" style="display: none;"></div>
+        <div id="successMessage" class="alert alert-success" style="display: none;"></div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email" class="form-label">E-Mail:</label>
+                <input type="email" id="email" name="email" class="form-input" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password" class="form-label">Passwort:</label>
+                <input type="password" id="password" name="password" class="form-input" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary login-button" id="submitBtn">Anmelden</button>
+        </form>
+
+        <div class="footer">
+            <p>&copy; 2025 Mailikan</p>
+        </div>
+    </div>
+
+    <script>
+        let isSetupMode = false;
+
+        // Check if setup is needed
+        async function checkSetup() {
+            try {
+                const response = await fetch('/api/auth/setup-needed');
+                const data = await response.json();
+                
+                if (data.setupNeeded) {
+                    isSetupMode = true;
+                    document.getElementById('setupInfo').style.display = 'block';
+                    document.getElementById('submitBtn').textContent = 'Konto erstellen';
+                    document.querySelector('.login-header p').textContent = 'Administrator-Konto erstellen';
+                }
+            } catch (error) {
+                console.error('Setup check failed:', error);
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            const endpoint = isSetupMode ? '/api/auth/setup' : '/api/auth/login';
+            
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    if (isSetupMode) {
+                        showSuccess('Administrator-Konto wurde erfolgreich erstellt!');
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 1500);
+                    } else {
+                        window.location.href = '/';
+                    }
+                } else {
+                    showError(data.error || 'Anmeldung fehlgeschlagen');
+                }
+            } catch (error) {
+                showError('Verbindungsfehler. Bitte versuchen Sie es später erneut.');
+            }
+        });
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        // Initialize
+        checkSetup();
+    </script>
+</body>
+</html>
