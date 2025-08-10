@@ -221,29 +221,6 @@ class EmailKanban {
                 await this.moveEmail(emailId, newColumn);
             });
         });
-
-        // Add archive zone event listeners
-        const archiveZone = document.getElementById('archive-zone');
-        if (archiveZone) {
-            archiveZone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                archiveZone.classList.add('drag-over');
-            });
-
-            archiveZone.addEventListener('dragleave', (e) => {
-                if (!archiveZone.contains(e.relatedTarget)) {
-                    archiveZone.classList.remove('drag-over');
-                }
-            });
-
-            archiveZone.addEventListener('drop', async (e) => {
-                e.preventDefault();
-                archiveZone.classList.remove('drag-over');
-                
-                const emailId = e.dataTransfer.getData('text/plain');
-                await this.archiveEmail(emailId);
-            });
-        }
     }
 
     async moveEmail(emailId, newColumn) {
