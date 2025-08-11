@@ -1,3 +1,5 @@
+# Geheimdatei für festen IMAP Account
+macOS-iOS/Mailkan/Mailkan/Secrets.swift
 # Dependencies
 node_modules/
 npm-debug.log*

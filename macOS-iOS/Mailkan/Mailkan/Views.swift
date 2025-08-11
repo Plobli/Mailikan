@@ -3,44 +3,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 #endif
 
-struct LoginView: View {
-    @EnvironmentObject var appVM: AppViewModel
-    @State private var email = ""
-    @State private var password = ""
-    @State private var loading = false
-    
-    var body: some View {
-        VStack(spacing: 24) {
-            Text("Mailikan")
-                .font(.largeTitle.bold())
-            VStack(alignment: .leading, spacing: 12) {
-                TextField("E-Mail", text: $email)
-                    .textFieldStyle(.roundedBorder)
-#if os(iOS)
-                    .autocapitalization(.none)
-                    .disableAutocorrection(true)
-#endif
-                SecureField("Passwort", text: $password)
-                    .textFieldStyle(.roundedBorder)
-            }
-            if let error = appVM.errorMessage { Text(error).foregroundStyle(.red).font(.footnote) }
-            Button {
-                Task { await login() }
-            } label: {
-                if loading { ProgressView() } else { Text("Anmelden") }
-            }
-            .buttonStyle(.borderedProminent)
-            .disabled(loading || email.isEmpty || password.isEmpty)
-        }
-        .padding(40)
-    }
-    
-    private func login() async {
-        loading = true
-        defer { loading = false }
-        await appVM.login(email: email, password: password)
-    }
-}
+// Login entfallen
 
 struct KanbanBoardView: View {
     @EnvironmentObject var appVM: AppViewModel
@@ -80,10 +43,27 @@ struct KanbanBoardView: View {
                 ToolbarItemGroup(placement: .primaryAction) {
                     if appVM.isSyncing { ProgressView() }
                     Button("Sync") { Task { await appVM.syncEmails() } }
-                    Button("Abmelden") { Task { await appVM.logout() } }
+                    Button("Log") { appVM.showLogViewer = true }
+                    // Einstellungen/Modus entfallen bei festem Account
+            // Logout entfällt
                 }
             }
-            .task { await appVM.loadEmails() }
+            // Keine Settings Sheet
+        .task { await appVM.loadEmails() }
+            .sheet(isPresented: $appVM.showLogViewer) {
+                NavigationStack {
+                    ScrollView {
+                        LazyVStack(alignment: .leading) {
+                            ForEach(Array(appVM.debugLog.enumerated()), id: \.offset) { _, line in
+                                Text(line).font(.system(size: 11, design: .monospaced)).frame(maxWidth: .infinity, alignment: .leading)
+                                Divider()
+                            }
+                        }.padding(8)
+                    }
+                    .navigationTitle("Debug Log")
+                    .toolbar { ToolbarItem(placement: .primaryAction) { Button("Schließen") { appVM.showLogViewer = false } } }
+                }.frame(minWidth: 600, minHeight: 400)
+            }
             .sheet(isPresented: $showDetail) {
                 if let email = selectedEmail { EmailDetailView(email: email) }
             }

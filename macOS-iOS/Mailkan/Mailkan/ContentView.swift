@@ -6,31 +6,20 @@
 //
 
 import SwiftUI
+#if os(macOS)
+import AppKit
+#if canImport(UniformTypeIdentifiers)
+import UniformTypeIdentifiers
+#endif
+#else
+import UIKit
+#endif
 
 struct RootView: View {
     @EnvironmentObject var appVM: AppViewModel
-
-    var body: some View {
-        Group {
-            switch appVM.authState {
-            case .loading:
-                ProgressView("Lade...")
-                    .progressViewStyle(.circular)
-            case .unauthenticated:
-                LoginView()
-            case .authenticated:
-                KanbanBoardView()
-            }
-        }
-        .task {
-            if appVM.authState == .loading {
-                await appVM.checkSession()
-            }
-        }
-    }
+    var body: some View { KanbanBoardView() }
 }
 
-#Preview {
-    RootView()
-        .environmentObject(AppViewModel(mock: true))
-}
+#Preview { RootView().environmentObject(AppViewModel(mock: true)) }
+
+// IMAPSettingsView entfernt – fester Account wird automatisch verbunden
