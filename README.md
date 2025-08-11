@@ -265,3 +265,39 @@ Beiträge sind willkommen! Bitte erstellen Sie einen Pull Request oder öffnen S
 ---
 
 **Entwickelt für die private E-Mail-Organisation mit Fokus auf Einfachheit und Effizienz.**
+
+## 🖥️📱 Native iOS/macOS App (SwiftUI)
+
+Unter `macOS-iOS/` befindet sich ein Multiplatform Xcode-Projekt, das die Weboberfläche (Spalten: Posteingang, In Bearbeitung, Warte auf Antwort) nativ abbildet.
+
+### Start Backend
+```bash
+npm install
+npm start
+```
+
+### App starten
+1. Xcode öffnen: `macOS-iOS/Mailkan/Mailkan.xcodeproj`
+2. Ziel (Simulator oder My Mac) wählen
+3. Run (⌘R)
+
+### Enthaltene Funktionen (Parity)
+* Login / Logout (Session basiert)
+* Laden & Anzeigen aller E-Mails nach Spalte
+* Statuswechsel (Buttons / Kontextmenü, Drag & Drop auf unterstützten Geräten)
+* Synchronisieren (`/api/emails/sync`)
+* Archivieren
+* Detailansicht (HTML oder Text)
+
+### Technische Hinweise
+* API Basis: `http://localhost:3000` (in `Networking.swift` änderbar)
+* ATS-Ausnahme für `localhost` hinzugefügt (nur Entwicklung). Für Produktion HTTPS nutzen und Ausnahme entfernen.
+* HTML Rendering aktuell via AttributedString (einfach). Für komplexeres Layout später ggf. `WKWebView`.
+* Keine zusätzlichen Features gegenüber Web implementiert (gewünschter Scope).
+
+### Nächste mögliche Erweiterungen
+* Persistente Offline-Caches
+* Suche / Filter
+* Push / Background Fetch
+* Settings-UI innerhalb der App
+* Besseres HTML Rendering
