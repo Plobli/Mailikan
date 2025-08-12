@@ -31,18 +31,18 @@ NODE_VERSION="18"
 CURRENT_USER=$(whoami)
 MAILIKAN_PORT="3001"  # Port für Mailikan App
 
-# Domain interaktiv abfragen
+# Domain interaktiv abfragen (optional für Referenz)
 echo_info "Mailikan Deployment Configuration"
 echo ""
-echo -n "Enter your domain name (e.g., mailikan.example.com): "
+echo -n "Enter your domain name (optional, for reference): "
 read DOMAIN
 
 if [[ -z "${DOMAIN}" ]]; then
-    echo_error "Domain name is required!"
-    exit 1
+    DOMAIN="localhost"
+    echo_info "No domain specified, using localhost"
+else
+    echo_info "Using domain: ${DOMAIN} (for reference only)"
 fi
-
-echo_info "Using domain: ${DOMAIN}"
 
 # Deployment Typ bestimmen
 DEPLOY_TYPE=${1:-production}
@@ -145,6 +145,28 @@ echo_info "Executing: $PM2_STARTUP_CMD"
 eval "$PM2_STARTUP_CMD" || echo_warn "PM2 startup configuration may have failed, continuing..."
 
 echo_info "Application deployment completed successfully!"
+
+echo_info "Deployment completed! Your app should be available at http://$(curl -s ifconfig.me):${MAILIKAN_PORT}"
+echo ""
+echo_info "🎉 Deployment Summary:"
+echo "  📱 App URL: http://$(curl -s ifconfig.me):${MAILIKAN_PORT}"
+echo "  🔌 App Port: ${MAILIKAN_PORT}"
+echo "  📁 App Directory: $REMOTE_DIR"
+echo "  📊 Process Manager: PM2 (pm2 status)"
+echo "  📝 Logs: pm2 logs mailikan"
+echo ""
+echo_warn "📋 Next Steps:"
+echo "  1. Configure your web server (Caddy/Nginx) manually if needed"
+echo "  2. Set up your email credentials in the web interface"
+echo "  3. Configure backup schedule: crontab -e"
+echo "     Add: 0 2 * * * $REMOTE_DIR/backup.sh"
+echo "  4. Monitor logs: pm2 logs mailikan"
+echo ""
+echo_info "🔧 Useful Commands:"
+echo "  pm2 restart mailikan     # Restart app"
+echo "  pm2 logs mailikan        # View logs"
+echo "  $REMOTE_DIR/backup.sh    # Create backup"
+echo "  netstat -tlnp | grep :${MAILIKAN_PORT}  # Check port"
 
 # Caddy Konfiguration
 echo_info "Setting up Caddy configuration..."
