@@ -1,16 +1,33 @@
 [Unit]
-Description=Mailikan Email Kanban Board
+Description=Mailikan Email Kanban Application
+Documentation=https://github.com/Plobli/Mailikan
 After=network.target
 
 [Service]
-Type=simple
-User=www-data
-WorkingDirectory=/home/user/Mailikan
+Type=notify
+User=christopher
+Group=christopher
+WorkingDirectory=/opt/mailikan
+Environment=NODE_ENV=production
+Environment=PORT=3000
 ExecStart=/usr/bin/node server.js
 Restart=on-failure
 RestartSec=10
-Environment=NODE_ENV=production
-Environment=PORT=3000
+TimeoutStartSec=60
+TimeoutStopSec=30
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=mailikan
+
+# Security Settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/mailikan/data
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
 
 [Install]
 WantedBy=multi-user.target

@@ -1,22 +1,26 @@
 module.exports = {
   apps: [{
-    name: 'mailikan',
-    script: './server.js',
+    name: 'mailikan-dev',
+    script: 'server.js',
     instances: 1,
     autorestart: true,
-    watch: false,
-    max_memory_restart: '1G',
+    watch: true,
+    watch_delay: 1000,
+    ignore_watch: [
+      'node_modules',
+      'data',
+      '*.log',
+      'macOS-iOS'
+    ],
     env: {
       NODE_ENV: 'development',
-      PORT: 3000
-    },
-    env_production: {
-      NODE_ENV: 'production',
-      PORT: 3000
+      PORT: 3000,
+      SESSION_SECRET: 'dev-secret-key'
     },
     error_file: './logs/err.log',
     out_file: './logs/out.log',
     log_file: './logs/combined.log',
-    time: true
+    time: true,
+    log_date_format: 'YYYY-MM-DD HH:mm:ss Z'
   }]
 };
