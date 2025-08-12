@@ -137,30 +137,55 @@ if [ -f /etc/caddy/Caddyfile ]; then
 fi
 
 # Prüfen ob Domain bereits in Caddyfile existiert
-if [ -f /etc/caddy/Caddyfile ] && grep -q "^${DOMAIN}" /etc/caddy/Caddyfile; then
+if [ -f /etc/caddy/Caddyfile ] && grep -q "${DOMAIN}" /etc/caddy/Caddyfile; then
     echo_warn "Domain ${DOMAIN} already exists in Caddyfile. Updating configuration..."
     
     # Temporäre Datei für neue Konfiguration
     TEMP_CADDY=$(mktemp)
     
-    # Bestehende Konfiguration kopieren, aber Domain-Block ersetzen
+    # Bestehende Konfiguration kopieren, aber alle Domain-Blöcke entfernen
     awk -v domain="$DOMAIN" '
-    BEGIN { in_domain_block = 0; skip_block = 0 }
+    BEGIN { 
+        skip_block = 0
+        in_mailikan_section = 0
+    }
+    
+    # Start eines neuen Blocks erkennen
     /^[a-zA-Z0-9.-]+/ {
-        if ($0 == domain " {" || $0 == domain "{") {
+        if (index($0, domain) > 0) {
             skip_block = 1
             next
         } else {
             skip_block = 0
         }
     }
+    
+    # Mailikan Kommentare erkennen
+    /^# Mailikan Configuration/ {
+        in_mailikan_section = 1
+        skip_block = 1
+        next
+    }
+    
+    # Ende eines Blocks
     /^}$/ {
-        if (skip_block) {
+        if (skip_block || in_mailikan_section) {
             skip_block = 0
+            in_mailikan_section = 0
             next
         }
     }
-    !skip_block { print }
+    
+    # HTTP-Redirect-Blöcke für diese Domain auch entfernen
+    /^http:\/\// {
+        if (index($0, domain) > 0) {
+            skip_block = 1
+            next
+        }
+    }
+    
+    # Nur Zeilen ausgeben, die nicht übersprungen werden
+    !skip_block && !in_mailikan_section { print }
     ' /etc/caddy/Caddyfile > "$TEMP_CADDY"
     
     # Neue Domain-Konfiguration anhängen
