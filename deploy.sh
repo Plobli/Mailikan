@@ -6,24 +6,6 @@
 
 set -e
 
-# Konfiguration
-GITHUB_REPO="https://github.com/Plobli/Mailikan.git"
-REMOTE_DIR="/opt/mailikan"
-NODE_VERSION="18"
-CURRENT_USER=$(whoami)
-
-# Domain interaktiv abfragen
-echo_info "Mailikan Deployment Configuration"
-echo ""
-read -p "Enter your domain name (e.g., mailikan.example.com): " DOMAIN
-
-if [ -z "$DOMAIN" ]; then
-    echo_error "Domain name is required!"
-    exit 1
-fi
-
-echo_info "Using domain: $DOMAIN"
-
 # Farben für Output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -41,6 +23,24 @@ echo_warn() {
 echo_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
+
+# Konfiguration
+GITHUB_REPO="https://github.com/Plobli/Mailikan.git"
+REMOTE_DIR="/opt/mailikan"
+NODE_VERSION="18"
+CURRENT_USER=$(whoami)
+
+# Domain interaktiv abfragen
+echo_info "Mailikan Deployment Configuration"
+echo ""
+read -p "Enter your domain name (e.g., mailikan.example.com): " DOMAIN
+
+if [ -z "$DOMAIN" ]; then
+    echo_error "Domain name is required!"
+    exit 1
+fi
+
+echo_info "Using domain: $DOMAIN"
 
 # Deployment Typ bestimmen
 DEPLOY_TYPE=${1:-production}
