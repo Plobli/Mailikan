@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Mailikan Deployment Script für Debian Server
 # Dieses Script wird DIREKT auf dem Server ausgeführt
-# Usage: wget -O deploy.sh https://raw.githubusercontent.com/Plobli/Mailikan/main/deploy.sh && chmod +x deploy.sh && ./deploy.sh
+# Usage: wget -O deploy.sh https://raw.githubusercontent.com/Plobli/Mailikan/main/deploy.sh && chmod +x deploy.sh && bash deploy.sh
 
-set -e
+set -euo pipefail  # Strikte Fehlerbehandlung
 
 # Farben für Output
 RED='\033[0;31m'
@@ -33,14 +33,15 @@ CURRENT_USER=$(whoami)
 # Domain interaktiv abfragen
 echo_info "Mailikan Deployment Configuration"
 echo ""
-read -p "Enter your domain name (e.g., mailikan.example.com): " DOMAIN
+echo -n "Enter your domain name (e.g., mailikan.example.com): "
+read DOMAIN
 
-if [ -z "$DOMAIN" ]; then
+if [[ -z "${DOMAIN}" ]]; then
     echo_error "Domain name is required!"
     exit 1
 fi
 
-echo_info "Using domain: $DOMAIN"
+echo_info "Using domain: ${DOMAIN}"
 
 # Deployment Typ bestimmen
 DEPLOY_TYPE=${1:-production}
