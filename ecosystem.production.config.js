@@ -8,7 +8,7 @@ module.exports = {
     max_memory_restart: '1G',
     env: {
       NODE_ENV: 'production',
-      PORT: 3000,
+      PORT: 3001,
       SESSION_SECRET: 'change-this-in-production-to-a-random-string'
     },
     error_file: '/var/log/mailikan/err.log',

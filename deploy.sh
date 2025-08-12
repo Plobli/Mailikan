@@ -29,6 +29,7 @@ GITHUB_REPO="https://github.com/Plobli/Mailikan.git"
 REMOTE_DIR="/opt/mailikan"
 NODE_VERSION="18"
 CURRENT_USER=$(whoami)
+MAILIKAN_PORT="3001"  # Port für Mailikan App
 
 # Domain interaktiv abfragen
 echo_info "Mailikan Deployment Configuration"
@@ -107,6 +108,24 @@ chmod +x backup.sh
 # Log-Verzeichnis erstellen
 sudo mkdir -p /var/log/mailikan
 sudo chown ${CURRENT_USER}:${CURRENT_USER} /var/log/mailikan
+
+# .env Datei für Produktion erstellen/aktualisieren
+echo_info "Configuring environment variables..."
+cat > /tmp/mailikan.env << ENV_EOF
+NODE_ENV=production
+PORT=${MAILIKAN_PORT}
+SESSION_SECRET=$(openssl rand -base64 32)
+SECURE_COOKIES=true
+APP_NAME=Mailikan
+APP_VERSION=1.0.0
+LOG_LEVEL=info
+LOG_FILE=/var/log/mailikan/app.log
+ENV_EOF
+
+# .env Datei ins Projektverzeichnis kopieren
+sudo cp /tmp/mailikan.env ${REMOTE_DIR}/.env
+sudo chown ${CURRENT_USER}:${CURRENT_USER} ${REMOTE_DIR}/.env
+rm /tmp/mailikan.env
 
 # Systemd Service installieren
 sudo cp mailikan.service /etc/systemd/system/
@@ -194,7 +213,7 @@ if [ -f /etc/caddy/Caddyfile ] && grep -q "${DOMAIN}" /etc/caddy/Caddyfile; then
 # Mailikan Configuration for ${DOMAIN}
 ${DOMAIN} {
     # Reverse Proxy zu Node.js App
-    reverse_proxy localhost:3000
+    reverse_proxy localhost:${MAILIKAN_PORT}
     
     # Headers für Sicherheit
     header {
@@ -250,7 +269,7 @@ else
 # Mailikan Configuration for ${DOMAIN}
 ${DOMAIN} {
     # Reverse Proxy zu Node.js App
-    reverse_proxy localhost:3000
+    reverse_proxy localhost:${MAILIKAN_PORT}
     
     # Headers für Sicherheit
     header {
@@ -324,7 +343,8 @@ echo_info "Deployment completed! Your app should be available at https://$DOMAIN
 echo ""
 echo_info "🎉 Deployment Summary:"
 echo "  📱 App URL: https://$DOMAIN"
-echo "  📁 App Directory: $REMOTE_DIR"
+echo "  � App Port: ${MAILIKAN_PORT}"
+echo "  �📁 App Directory: $REMOTE_DIR"
 echo "  📊 Process Manager: PM2 (pm2 status)"
 echo "  🌐 Web Server: Caddy"
 echo "  📝 Logs: pm2 logs mailikan"

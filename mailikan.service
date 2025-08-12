@@ -9,7 +9,7 @@ User=christopher
 Group=christopher
 WorkingDirectory=/opt/mailikan
 Environment=NODE_ENV=production
-Environment=PORT=3000
+Environment=PORT=3001
 ExecStart=/usr/bin/node server.js
 Restart=on-failure
 RestartSec=10
