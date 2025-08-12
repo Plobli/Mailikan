@@ -120,7 +120,10 @@ pm2 start ecosystem.production.config.js
 pm2 save
 
 # PM2 Startup konfigurieren
-sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u ${CURRENT_USER} --hp /home/${CURRENT_USER}
+echo_info "Configuring PM2 startup..."
+PM2_STARTUP_CMD=$(pm2 startup systemd -u ${CURRENT_USER} --hp /home/${CURRENT_USER} | tail -n 1)
+echo_info "Executing: $PM2_STARTUP_CMD"
+eval "$PM2_STARTUP_CMD" || echo_warn "PM2 startup configuration may have failed, continuing..."
 
 echo_info "Application deployment completed successfully!"
 
@@ -265,22 +268,30 @@ fi
 
 # Caddy Konfiguration validieren
 echo_info "Validating Caddy configuration..."
-if sudo caddy validate --config /etc/caddy/Caddyfile; then
+if timeout 30 sudo caddy validate --config /etc/caddy/Caddyfile; then
     echo_info "Caddy configuration is valid"
 else
-    echo_error "Caddy configuration is invalid! Restoring backup..."
-    if [ -f "/etc/caddy/Caddyfile.backup.$(date +%Y%m%d_%H%M%S)" ]; then
-        sudo cp "/etc/caddy/Caddyfile.backup.$(date +%Y%m%d_%H%M%S)" /etc/caddy/Caddyfile
+    echo_error "Caddy configuration validation failed or timed out! Restoring backup..."
+    BACKUP_FILE=$(ls -t /etc/caddy/Caddyfile.backup.* 2>/dev/null | head -n 1)
+    if [[ -n "$BACKUP_FILE" ]]; then
+        sudo cp "$BACKUP_FILE" /etc/caddy/Caddyfile
+        echo_info "Backup restored: $BACKUP_FILE"
     fi
     exit 1
 fi
 
 # Caddy Log Verzeichnis erstellen
 sudo mkdir -p /var/log/caddy
-sudo chown caddy:caddy /var/log/caddy
+sudo chown caddy:caddy /var/log/caddy 2>/dev/null || sudo chown root:root /var/log/caddy
 
 # Caddy Service neustarten
-sudo systemctl reload caddy
+echo_info "Reloading Caddy service..."
+if sudo systemctl reload caddy; then
+    echo_info "Caddy reloaded successfully"
+else
+    echo_warn "Caddy reload failed, trying restart..."
+    sudo systemctl restart caddy
+fi
 
 echo_info "Caddy configuration updated!"
 
