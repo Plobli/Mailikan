@@ -1,23 +1,29 @@
 class EmailKanban {
     constructor() {
         this.emails = [];
+        this.isLiveMode = true; // Live-Modus aktiviert
+        this.autoRefreshInterval = null;
+        this.autoRefreshTime = 30000; // 30 Sekunden
         this.init();
     }
 
     init() {
         this.bindEvents();
-        this.loadEmails();
+        this.loadEmailsLive(); // Live-Modus verwenden
         this.setupDragAndDrop();
         this.setupDropdownHandlers();
+        this.setupAutoRefresh();
         
         // Make instance globally available for dropdown callbacks
         window.kanban = this;
+        
+        console.log('EmailKanban initialized in Live Mode');
     }
 
     bindEvents() {
-        // Sync button
+        // Sync button - jetzt Live-Sync
         document.getElementById('sync-btn').addEventListener('click', () => {
-            this.syncEmails();
+            this.syncEmailsLive(true); // Force refresh
         });
 
         // Logout button
@@ -39,44 +45,113 @@ class EmailKanban {
         });
     }
 
-    async loadEmails() {
+    // === LIVE EMAIL METHODS ===
+
+    async loadEmailsLive() {
         try {
             this.showLoading(true);
-            const response = await fetch('/api/emails');
-            this.emails = await response.json();
-            this.renderEmails();
+            console.log('Loading emails in live mode...');
+            
+            const startTime = Date.now();
+            const response = await fetch('/api/emails/live');
+            const result = await response.json();
+            
+            if (response.ok && result.success) {
+                this.emails = result.emails;
+                this.renderEmails();
+                
+                const duration = Date.now() - startTime;
+                console.log(`Live emails loaded: ${this.emails.length} emails in ${duration}ms`);
+                
+                // Update status
+                this.updateStatus(`${this.emails.length} E-Mails geladen (Live-Modus)`, 'success');
+            } else {
+                throw new Error(result.error || 'Fehler beim Laden der E-Mails');
+            }
         } catch (error) {
+            console.error('Live email loading error:', error);
             this.showMessage('Fehler beim Laden der E-Mails: ' + error.message, 'error');
+            
+            // Fallback zu normalem Modus
+            await this.loadEmailsFallback();
         } finally {
             this.showLoading(false);
         }
     }
 
-    async syncEmails() {
+    async syncEmailsLive(forceRefresh = false) {
         try {
             this.showLoading(true);
-            const response = await fetch('/api/emails/sync', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
+            console.log(`Live sync started (force: ${forceRefresh})`);
             
+            const url = forceRefresh ? '/api/emails/live?refresh=true' : '/api/emails/live';
+            const response = await fetch(url);
             const result = await response.json();
-            if (response.ok) {
-                if (result.count > 0) {
-                    this.showMessage(`${result.count} neue E-Mails synchronisiert`, 'success');
-                }
-                // Always reload all emails to ensure consistency
-                await this.loadEmails();
+            
+            if (response.ok && result.success) {
+                const previousCount = this.emails.length;
+                this.emails = result.emails;
+                this.renderEmails();
+                
+                const newCount = this.emails.length;
+                const message = forceRefresh 
+                    ? `Live-Sync abgeschlossen: ${newCount} E-Mails`
+                    : `E-Mails aktualisiert: ${newCount} E-Mails`;
+                
+                this.showMessage(message, 'success');
+                console.log(`Live sync completed: ${previousCount} -> ${newCount} emails`);
             } else {
-                throw new Error(result.error);
+                throw new Error(result.error || 'Synchronisation fehlgeschlagen');
             }
         } catch (error) {
-            this.showMessage('Fehler bei der Synchronisation: ' + error.message, 'error');
+            console.error('Live sync error:', error);
+            this.showMessage('Fehler bei der Live-Synchronisation: ' + error.message, 'error');
         } finally {
             this.showLoading(false);
         }
+    }
+
+    async loadEmailsFallback() {
+        try {
+            console.log('Loading emails in fallback mode...');
+            const response = await fetch('/api/emails');
+            this.emails = await response.json();
+            this.renderEmails();
+            this.updateStatus('E-Mails geladen (Fallback-Modus)', 'warning');
+        } catch (error) {
+            console.error('Fallback loading failed:', error);
+            this.showMessage('Kritischer Fehler beim Laden der E-Mails', 'error');
+        }
+    }
+
+    setupAutoRefresh() {
+        // Auto-Refresh für Live-Modus
+        if (this.isLiveMode) {
+            this.autoRefreshInterval = setInterval(() => {
+                console.log('Auto-refresh triggered...');
+                this.syncEmailsLive(false); // Sanfter Refresh ohne Force
+            }, this.autoRefreshTime);
+            
+            console.log(`Auto-refresh setup: every ${this.autoRefreshTime / 1000} seconds`);
+        }
+    }
+
+    stopAutoRefresh() {
+        if (this.autoRefreshInterval) {
+            clearInterval(this.autoRefreshInterval);
+            this.autoRefreshInterval = null;
+            console.log('Auto-refresh stopped');
+        }
+    }
+
+    async loadEmails() {
+        // Fallback-Methode (Legacy)
+        return this.loadEmailsLive();
+    }
+
+    async syncEmails() {
+        // Fallback-Methode (Legacy)
+        return this.syncEmailsLive(true);
     }
 
     renderEmails() {
@@ -225,29 +300,53 @@ class EmailKanban {
 
     async moveEmail(emailId, newColumn) {
         try {
-            const response = await fetch(`/api/emails/${emailId}/column`, {
-                method: 'PUT',
+            // Finde die E-Mail für Live-Move-Daten
+            const email = this.emails.find(e => e.id === emailId);
+            if (!email) {
+                throw new Error('E-Mail nicht gefunden');
+            }
+            
+            console.log(`Moving email ${emailId} from ${email.column} to ${newColumn} (Live Mode)`);
+            
+            // Live-Move-API verwenden
+            const response = await fetch('/api/emails/live/move', {
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ column: newColumn })
+                body: JSON.stringify({ 
+                    uid: email.uid,
+                    fromColumn: email.column,
+                    toColumn: newColumn,
+                    subject: email.subject,
+                    from: email.from
+                })
             });
 
-            if (response.ok) {
-                // Update local data
-                const email = this.emails.find(e => e.id === emailId);
-                if (email) {
-                    email.column = newColumn;
-                    this.renderEmails();
-                }
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                console.log(`Live move successful: ${emailId} -> ${newColumn}`);
+                
+                // Sofort lokale Aktualisierung (optimistisch)
+                email.column = newColumn;
+                this.renderEmails();
+                
+                this.showMessage(`E-Mail verschoben: ${newColumn}`, 'success');
+                
+                // Nach kurzer Verzögerung Live-Sync für Konsistenz
+                setTimeout(() => {
+                    this.syncEmailsLive(false);
+                }, 1000);
             } else {
-                const error = await response.json();
-                throw new Error(error.error);
+                throw new Error(result.error || 'Move-Operation fehlgeschlagen');
             }
         } catch (error) {
+            console.error('Live move error:', error);
             this.showMessage('Fehler beim Verschieben der E-Mail: ' + error.message, 'error');
-            // Reload emails to ensure consistency
-            await this.loadEmails();
+            
+            // Bei Fehler: Live-Reload für Konsistenz
+            await this.syncEmailsLive(true);
         }
     }
 
@@ -338,6 +437,71 @@ class EmailKanban {
         } catch (error) {
             this.showMessage('Fehler beim Abmelden: ' + error.message, 'error');
         }
+    }
+
+    // === UTILITY METHODS ===
+
+    updateStatus(message, type = 'info') {
+        // Status-Update im UI anzeigen
+        console.log(`[${type.toUpperCase()}] ${message}`);
+        
+        // Hier könnte ein Status-Banner im UI aktualisiert werden
+        // Beispiel: this.showTemporaryStatus(message, type);
+    }
+
+    async testLiveConnection() {
+        try {
+            const response = await fetch('/api/emails/test/connection');
+            const result = await response.json();
+            
+            if (result.success) {
+                this.updateStatus('Live-Verbindung erfolgreich', 'success');
+                return true;
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            this.updateStatus(`Live-Verbindung fehlgeschlagen: ${error.message}`, 'error');
+            return false;
+        }
+    }
+
+    async getCacheStatus() {
+        try {
+            const response = await fetch('/api/emails/cache/status');
+            const result = await response.json();
+            
+            if (result.success) {
+                console.log('Cache Status:', result.cache);
+                console.log('Connection Status:', result.connections);
+                return result;
+            }
+        } catch (error) {
+            console.error('Cache status error:', error);
+        }
+        return null;
+    }
+
+    async clearCache() {
+        try {
+            const response = await fetch('/api/emails/cache/clear', {
+                method: 'POST'
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                this.showMessage('Cache geleert', 'success');
+                await this.syncEmailsLive(true); // Force refresh nach Cache-Clear
+            }
+        } catch (error) {
+            this.showMessage('Fehler beim Leeren des Cache: ' + error.message, 'error');
+        }
+    }
+
+    // Cleanup beim Verlassen der Seite
+    destroy() {
+        this.stopAutoRefresh();
+        console.log('EmailKanban destroyed');
     }
 }
 

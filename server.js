@@ -7,6 +7,7 @@ const flash = require('connect-flash');
 require('dotenv').config();
 
 const emailService = require('./services/emailService');
+const liveEmailService = require('./services/liveEmailService');
 const kanbanService = require('./services/kanbanService');
 const authService = require('./services/authService');
 const settingsService = require('./services/settingsService');
@@ -216,6 +217,10 @@ app.post('/api/settings/test', authService.requireAuth, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// === LIVE EMAIL ROUTES ===
+const liveEmailRoutes = require('./routes/liveEmailRoutes');
+app.use('/api/emails', liveEmailRoutes);
 
 // Initialize server and ensure Kanban folders exist
 async function initializeServer() {
