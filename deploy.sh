@@ -9,9 +9,20 @@ set -e
 # Konfiguration
 GITHUB_REPO="https://github.com/Plobli/Mailikan.git"
 REMOTE_DIR="/opt/mailikan"
-DOMAIN="your-domain.com"  # Anpassen Sie dies an Ihre Domain
 NODE_VERSION="18"
 CURRENT_USER=$(whoami)
+
+# Domain interaktiv abfragen
+echo_info "Mailikan Deployment Configuration"
+echo ""
+read -p "Enter your domain name (e.g., mailikan.example.com): " DOMAIN
+
+if [ -z "$DOMAIN" ]; then
+    echo_error "Domain name is required!"
+    exit 1
+fi
+
+echo_info "Using domain: $DOMAIN"
 
 # Farben für Output
 RED='\033[0;31m'
@@ -115,9 +126,43 @@ echo_info "Application deployment completed successfully!"
 # Caddy Konfiguration
 echo_info "Setting up Caddy configuration..."
 
-# Caddy Konfigurationsdatei erstellen
-sudo tee /etc/caddy/Caddyfile << CADDY_EOF
-# Mailikan Caddy Configuration
+# Backup des bestehenden Caddyfiles erstellen
+if [ -f /etc/caddy/Caddyfile ]; then
+    echo_info "Backing up existing Caddyfile..."
+    sudo cp /etc/caddy/Caddyfile "/etc/caddy/Caddyfile.backup.$(date +%Y%m%d_%H%M%S)"
+fi
+
+# Prüfen ob Domain bereits in Caddyfile existiert
+if [ -f /etc/caddy/Caddyfile ] && grep -q "^${DOMAIN}" /etc/caddy/Caddyfile; then
+    echo_warn "Domain ${DOMAIN} already exists in Caddyfile. Updating configuration..."
+    
+    # Temporäre Datei für neue Konfiguration
+    TEMP_CADDY=$(mktemp)
+    
+    # Bestehende Konfiguration kopieren, aber Domain-Block ersetzen
+    awk -v domain="$DOMAIN" '
+    BEGIN { in_domain_block = 0; skip_block = 0 }
+    /^[a-zA-Z0-9.-]+/ {
+        if ($0 == domain " {" || $0 == domain "{") {
+            skip_block = 1
+            next
+        } else {
+            skip_block = 0
+        }
+    }
+    /^}$/ {
+        if (skip_block) {
+            skip_block = 0
+            next
+        }
+    }
+    !skip_block { print }
+    ' /etc/caddy/Caddyfile > "$TEMP_CADDY"
+    
+    # Neue Domain-Konfiguration anhängen
+    cat >> "$TEMP_CADDY" << CADDY_EOF
+
+# Mailikan Configuration for ${DOMAIN}
 ${DOMAIN} {
     # Reverse Proxy zu Node.js App
     reverse_proxy localhost:3000
@@ -153,11 +198,81 @@ ${DOMAIN} {
     encode gzip
 }
 
-# HTTP zu HTTPS Redirect
+# HTTP zu HTTPS Redirect für ${DOMAIN}
 http://${DOMAIN} {
     redir https://${DOMAIN}{uri} permanent
 }
 CADDY_EOF
+
+    # Neue Konfiguration installieren
+    sudo mv "$TEMP_CADDY" /etc/caddy/Caddyfile
+    
+else
+    echo_info "Adding new domain configuration to Caddyfile..."
+    
+    # Falls Caddyfile nicht existiert, erstellen
+    if [ ! -f /etc/caddy/Caddyfile ]; then
+        sudo touch /etc/caddy/Caddyfile
+    fi
+    
+    # Neue Konfiguration anhängen
+    sudo tee -a /etc/caddy/Caddyfile << CADDY_EOF
+
+# Mailikan Configuration for ${DOMAIN}
+${DOMAIN} {
+    # Reverse Proxy zu Node.js App
+    reverse_proxy localhost:3000
+    
+    # Headers für Sicherheit
+    header {
+        # Security Headers
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Frame-Options "DENY"
+        X-Content-Type-Options "nosniff"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        
+        # CORS Headers (falls benötigt)
+        Access-Control-Allow-Origin "*"
+        Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+        Access-Control-Allow-Headers "Content-Type, Authorization"
+    }
+    
+    # Statische Assets cachen
+    @static {
+        path *.css *.js *.png *.jpg *.jpeg *.gif *.ico *.svg *.woff *.woff2
+    }
+    header @static Cache-Control "public, max-age=31536000"
+    
+    # Logging
+    log {
+        output file /var/log/caddy/mailikan.log
+        format json
+    }
+    
+    # Kompression
+    encode gzip
+}
+
+# HTTP zu HTTPS Redirect für ${DOMAIN}
+http://${DOMAIN} {
+    redir https://${DOMAIN}{uri} permanent
+}
+CADDY_EOF
+
+fi
+
+# Caddy Konfiguration validieren
+echo_info "Validating Caddy configuration..."
+if sudo caddy validate --config /etc/caddy/Caddyfile; then
+    echo_info "Caddy configuration is valid"
+else
+    echo_error "Caddy configuration is invalid! Restoring backup..."
+    if [ -f "/etc/caddy/Caddyfile.backup.$(date +%Y%m%d_%H%M%S)" ]; then
+        sudo cp "/etc/caddy/Caddyfile.backup.$(date +%Y%m%d_%H%M%S)" /etc/caddy/Caddyfile
+    fi
+    exit 1
+fi
 
 # Caddy Log Verzeichnis erstellen
 sudo mkdir -p /var/log/caddy
@@ -169,8 +284,23 @@ sudo systemctl reload caddy
 echo_info "Caddy configuration updated!"
 
 echo_info "Deployment completed! Your app should be available at https://$DOMAIN"
-echo_warn "Don't forget to:"
-echo "  1. Update the DOMAIN variable in this script if needed"
-echo "  2. Configure your DNS to point to this server"
-echo "  3. Set up your email credentials in the web interface"
-echo "  4. Configure backup schedule with crontab"
+echo ""
+echo_info "🎉 Deployment Summary:"
+echo "  📱 App URL: https://$DOMAIN"
+echo "  📁 App Directory: $REMOTE_DIR"
+echo "  📊 Process Manager: PM2 (pm2 status)"
+echo "  🌐 Web Server: Caddy"
+echo "  📝 Logs: pm2 logs mailikan"
+echo ""
+echo_warn "📋 Next Steps:"
+echo "  1. Configure your DNS to point $DOMAIN to this server"
+echo "  2. Set up your email credentials in the web interface"
+echo "  3. Configure backup schedule: crontab -e"
+echo "     Add: 0 2 * * * $REMOTE_DIR/backup.sh"
+echo "  4. Monitor logs: pm2 logs mailikan"
+echo ""
+echo_info "🔧 Useful Commands:"
+echo "  pm2 restart mailikan     # Restart app"
+echo "  pm2 logs mailikan        # View logs"
+echo "  sudo systemctl reload caddy  # Reload web server"
+echo "  $REMOTE_DIR/backup.sh    # Create backup"
