@@ -1,0 +1,68 @@
+{
+        auto_https off
+}
+
+# AdGuard Home für dns.cfrlab.de und *.dns.cfrlab.de (ClientIDs)
+dns.cfrlab.de, *.dns.cfrlab.de {
+        tls /etc/caddy/certs/dns.cfrlab.de.crt /etc/caddy/certs/dns.cfrlab.de.key
+        reverse_proxy 127.0.0.1:3000
+
+        header {
+                Strict-Transport-Security "max-age=31536000; includeSubDomains"
+                X-Content-Type-Options "nosniff"
+                X-Frame-Options "DENY"
+                -Server
+        }
+
+        log {
+                output file /var/log/caddy/adguard.log
+                format console
+        }
+}
+
+# Mailikan für mailikan.cfrlab.de
+mailikan.cfrlab.de {
+        tls /etc/caddy/certs/cfrlab.de.crt /etc/caddy/certs/cfrlab.de.key
+        reverse_proxy 127.0.0.1:3001
+
+        header {
+                Strict-Transport-Security "max-age=31536000; includeSubDomains"
+                X-Content-Type-Options "nosniff"
+                X-Frame-Options "DENY"
+                X-XSS-Protection "1; mode=block"
+                Referrer-Policy "strict-origin-when-cross-origin"
+                -Server
+        }
+
+        # Statische Assets cachen
+        @static {
+                path *.css *.js *.png *.jpg *.jpeg *.gif *.ico *.svg *.woff *.woff2
+        }
+        header @static Cache-Control "public, max-age=31536000"
+
+        log {
+                output file /var/log/caddy/mailikan.log
+                format console
+        }
+
+        encode gzip
+}
+
+# HTTP zu HTTPS Redirect
+http://dns.cfrlab.de, http://*.dns.cfrlab.de {
+        redir https://{host}{uri}
+}
+
+# HTTP zu HTTPS Redirect für Mailikan
+http://mailikan.cfrlab.de {
+        redir https://mailikan.cfrlab.de{uri}
+}
+
+# Alle anderen *.cfrlab.de Subdomains blockieren (außer mailikan)
+*.cfrlab.de {
+        @not_mailikan not host mailikan.cfrlab.de
+        handle @not_mailikan {
+                tls /etc/caddy/certs/cfrlab.de.crt /etc/caddy/certs/cfrlab.de.key
+                respond "Access denied" 444
+        }
+}
